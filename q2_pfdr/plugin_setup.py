@@ -1,12 +1,10 @@
 import qiime.plugin
-
+from qiime.plugin import (SemanticType, Str, Int, Float, Choices,
+                          MetadataCategory, Plugin)
+from q2_types.feature_table import (
+    FeatureTable, Frequency)
 import q2_pfdr
 
-# These imports are only included to support the example methods and
-# visualizers. Remove these imports when you are ready to develop your plugin.
-from q2_dummy_types import IntSequence1, IntSequence2, Mapping
-from ._dummy_method import concatenate_ints
-from ._dummy_visualizer import mapping_viz
 
 plugin = qiime.plugin.Plugin(
     name='pfdr',
@@ -23,40 +21,19 @@ plugin = qiime.plugin.Plugin(
     citation_text=None
 )
 
-# The next two code blocks are examples of how to register methods and
-# visualizers. Replace them with your own registrations when you are ready to
-# develop your plugin.
+_statistical_tests = q2_pfdr._pfdr.statistical_tests()
+_transform_functions = q2_pfdr._pfdr.transform_functions()
 
-plugin.methods.register_function(
-    function=concatenate_ints,
-    inputs={
-        'ints1': IntSequence1 | IntSequence2,
-        'ints2': IntSequence1,
-        'ints3': IntSequence2
-    },
-    parameters={
-        'int1': qiime.plugin.Int,
-        'int2': qiime.plugin.Int
-    },
-    outputs=[
-        ('concatenated_ints', IntSequence1)
-    ],
-    name='Concatenate integers',
-    description='This method concatenates integers into a single sequence in '
-                'the order they are provided.'
-)
-
+# TODO: Pass in a RelativeFrequency, PresenceAbsence, Composition type?
 plugin.visualizers.register_function(
-    function=mapping_viz,
-    inputs={
-        'mapping1': Mapping,
-        'mapping2': Mapping
-    },
+    function=q2_pfdr.permutation_fdr,
+    inputs={'table': FeatureTable[Frequency]},
     parameters={
-        'key_label': qiime.plugin.Str,
-        'value_label': qiime.plugin.Str
+        'metadata': MetadataCategory,
+        'statistical_test': Str % Choices(_statistical_tests),
+        'transform_function': Str % Choices(_transform_functions),
+        'permutations': Int
     },
-    name='Visualize two mappings',
-    description='This visualizer produces an HTML visualization of two '
-                'key-value mappings, each sorted in alphabetical order by key.'
+    name='Apply blah ...',
+    description=("Apply blah.")
 )
