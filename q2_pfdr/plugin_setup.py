@@ -1,14 +1,16 @@
-import qiime.plugin
-from qiime.plugin import (SemanticType, Str, Int, Float, Choices,
+import qiime2.plugin
+from qiime2.plugin import (SemanticType, Str, Int, Float, Choices,
                           MetadataCategory, Plugin)
 from q2_types.feature_table import (
     FeatureTable, Frequency)
+from q2_pfdr._pfdr import permutation_fdr
+from q2_types.sample_data import AlphaDiversity, SampleData
 import q2_pfdr
 
 
-plugin = qiime.plugin.Plugin(
+plugin = qiime2.plugin.Plugin(
     name='pfdr',
-    version=q2_pfdr.__version__,
+    version="0.0.1",
     website='Website for q2-pfdr',
     package='q2_pfdr',
     # Information on how to obtain user support should be provided as a free
@@ -25,15 +27,17 @@ _statistical_tests = q2_pfdr._pfdr.statistical_tests()
 _transform_functions = q2_pfdr._pfdr.transform_functions()
 
 # TODO: Pass in a RelativeFrequency, PresenceAbsence, Composition type?
-plugin.visualizers.register_function(
+plugin.methods.register_function(
     function=q2_pfdr.permutation_fdr,
     inputs={'table': FeatureTable[Frequency]},
+    outputs=[('reject', SampleData[AlphaDiversity])],
     parameters={
         'metadata': MetadataCategory,
         'statistical_test': Str % Choices(_statistical_tests),
         'transform_function': Str % Choices(_transform_functions),
-        'permutations': Int
+        'permutations': Int,
+        'alpha': Float,
     },
-    name='Apply blah ...',
-    description=("Apply blah.")
+    name='Permutation FDR',
+    description=("Permutation FDR")
 )
