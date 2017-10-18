@@ -3,7 +3,7 @@ import re
 import ast
 
 setup(
-    name="q2-pfdr",
+    name="q2-dsfdr",
     version="0.0.1",
     packages=find_packages(),
     # pandas and q2-dummy-types are only required for the dummy methods and
@@ -15,6 +15,6 @@ setup(
     description="Description of q2-pfdr",
     entry_points={
         "qiime2.plugins":
-        ["q2-pfdr=q2_pfdr.plugin_setup:plugin"]
+        ["q2-dsfdr=q2_dsfdr.plugin_setup:plugin"]
     }
 )
