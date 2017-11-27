@@ -7,14 +7,21 @@ from q2_types.sample_data import AlphaDiversity, SampleData
 from dsfdr import dsfdr
 import pandas as pd
 
+_citation = ('Jiang L, Amir A, Morton JT, Heller R, Arias-Castro E, Knight R. 2017. '
+             'Discrete False-Discovery Rate Improves Identification of Differentially Abundant Microbes'
+             'mSystems.00092-17 '
+             'https://doi.org/10.1128/mSystems.00092-17')
+
+_short_description = "Plugin for multiple comparisons in sparse Microbiome Data"
 
 plugin = qiime2.plugin.Plugin(
     name='dsfdr',
     version="0.0.1",
-    website='Website for q2-dsfdr',
+    website='https://github.com/serenejiang/q2_dsfdr',
     package='q2_dsfdr',
-    user_support_text=None,
-    citation_text=None
+    short_description=_short_description,
+    description=('This is a QIIME 2 plugin supporting multiple comparisons on sparse microbiome feature tables and metadata'),
+    citation_text=_citation
 )
 
 
