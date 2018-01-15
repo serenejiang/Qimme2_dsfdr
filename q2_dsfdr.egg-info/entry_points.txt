@@ -1,0 +1,3 @@
+[qiime2.plugins]
+q2-dsfdr = q2_dsfdr.plugin_setup:plugin
+
