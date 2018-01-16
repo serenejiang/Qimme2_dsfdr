@@ -1,11 +1,12 @@
 import qiime2.plugin
 from qiime2.plugin import (SemanticType, Str, Int, Float, Choices,
-                          MetadataCategory, Plugin)
+                           MetadataCategory, Plugin)
 from q2_types.feature_table import (
     FeatureTable, Frequency)
 from q2_types.sample_data import AlphaDiversity, SampleData
-from dsfdr.dsfdr import dsfdr
+from dsfdr import dsfdr
 import pandas as pd
+import numpy as np
 
 _citation = ('Jiang L, Amir A, Morton JT, Heller R, Arias-Castro E, Knight R. 2017. '
              'Discrete False-Discovery Rate Improves Identification of Differentially Abundant Microbes'
@@ -16,7 +17,7 @@ _short_description = "Plugin for multiple comparisons in sparse Microbiome Data"
 
 plugin = qiime2.plugin.Plugin(
     name='dsfdr',
-    version="0.0.1",
+    version="0.0.2",
     website='https://github.com/serenejiang/q2_dsfdr',
     package='q2_dsfdr',
     short_description=_short_description,
@@ -25,7 +26,7 @@ plugin = qiime2.plugin.Plugin(
 )
 
 
-def permutation_fdr(table : pd.DataFrame,
+def permutation_fdr(table: pd.DataFrame,
                     metadata: qiime2.MetadataCategory,
                     statistical_test: str = 'meandiff',
                     transform_function: str = 'rank',
@@ -33,11 +34,26 @@ def permutation_fdr(table : pd.DataFrame,
                     permutations: int=1000) -> pd.Series:
 
         metadata_series = metadata.to_series()[table.index]
-        ret_reject, ret_tstat, ret_pvals = dsfdr(table.values.T,
-			   metadata_series.values,
+        uvals = metadata_series.unique()
+        if len(uvals) < 2:
+            raise ValueError('Only one value in mapping file data column (%s). Aborting' % uvals[0])
+        if len(uvals) > 2:
+            raise ValueError('More than two values in mapping file data column (%s). Aborting' % uvals)
+        # labels need to be 0/1
+        labels = np.zeros(len(metadata_series))
+        labels[metadata_series == uvals[1]] = 1
+
+        # allow debug info. q2 takes care of what to show using the --verbose flag
+        try:
+            dsfdr.logger.setLevel(1)
+        except:
+            pass
+
+        ret_reject, ret_tstat, ret_pvals = dsfdr.dsfdr(table.values.T,
+               labels,
                transform_function,
                statistical_test,
-			   alpha, permutations)
+               alpha, permutations)
         return pd.Series(ret_reject, index=table.columns)
 
 
