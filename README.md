@@ -6,7 +6,7 @@ If you'd like to request new functionality or report bugs in DFDR, you should po
 
 # Installation
 ```
-source activate <your qiime environment>
+source activate <your qiime2 environment>
 pip install git+https://github.com/biocore/dsFDR.git
 pip install git+https://github.com/serenejiang/q2_dsfdr.git
 qiime dev refresh-cache
