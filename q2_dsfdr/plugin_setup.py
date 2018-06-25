@@ -1,6 +1,6 @@
 import qiime2.plugin
 from qiime2.plugin import (SemanticType, Str, Int, Float, Choices,
-                           MetadataColumn, Plugin)
+                           MetadataColumn, Metadata, Plugin)
 from q2_types.feature_table import (
     FeatureTable, Frequency)
 from q2_types.sample_data import AlphaDiversity, SampleData
@@ -68,7 +68,7 @@ plugin.methods.register_function(
     inputs={'table': FeatureTable[Frequency]},
     outputs=[('reject', SampleData[AlphaDiversity])],
     parameters={
-        'metadata': MetadataColumn,
+        'metadata': Metadata,
         'statistical_test': Str % Choices(_statistical_tests),
         'transform_function': Str % Choices(_transform_functions),
         'permutations': Int,
