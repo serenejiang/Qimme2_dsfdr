@@ -1,6 +1,6 @@
 import qiime2.plugin
 from qiime2.plugin import (SemanticType, Str, Int, Float, Choices,
-                           MetadataCategory, Plugin)
+                           MetadataColumn, Plugin)
 from q2_types.feature_table import (
     FeatureTable, Frequency)
 from q2_types.sample_data import AlphaDiversity, SampleData
@@ -27,7 +27,7 @@ plugin = qiime2.plugin.Plugin(
 
 
 def permutation_fdr(table: pd.DataFrame,
-                    metadata: qiime2.MetadataCategory,
+                    metadata: qiime2.MetadataColumn,
                     statistical_test: str = 'meandiff',
                     transform_function: str = 'rank',
                     alpha: float = 0.05,
@@ -68,7 +68,7 @@ plugin.methods.register_function(
     inputs={'table': FeatureTable[Frequency]},
     outputs=[('reject', SampleData[AlphaDiversity])],
     parameters={
-        'metadata': MetadataCategory,
+        'metadata': MetadataColumn,
         'statistical_test': Str % Choices(_statistical_tests),
         'transform_function': Str % Choices(_transform_functions),
         'permutations': Int,
