@@ -9,6 +9,7 @@ from q2_types.sample_data import SampleData
 from dsfdr import dsfdr
 import pandas as pd
 import numpy as np
+import os
 
 
 _citation = ('Jiang L, Amir A, Morton JT, Heller R, Arias-Castro E, Knight R. 2017. '
@@ -29,12 +30,14 @@ plugin = qiime2.plugin.Plugin(
 )
 
 
-def permutation_fdr(table: pd.DataFrame,
+def permutation_fdr(output_dir: str,
+                    table: pd.DataFrame,
                     metadata: qiime2.MetadataColumn,
                     statistical_test: str = 'meandiff',
                     transform_function: str = 'rank',
                     alpha: float = 0.05,
-                    permutations: int=1000) -> pd.Series:
+                    permutations: int=1000) -> None:
+        index_fp = os.path.join(output_dir, 'index.html')
 
         metadata_series = metadata.to_series()[table.index]
         uvals = metadata_series.unique()
@@ -52,12 +55,30 @@ def permutation_fdr(table: pd.DataFrame,
         except:
             pass
 
-        ret_reject, ret_tstat, ret_pvals = dsfdr.dsfdr(table.values.T,
-               labels,
-               transform_function,
-               statistical_test,
-               alpha, permutations)
-        return pd.Series(ret_reject, index=table.columns)
+        ret_reject, ret_tstat, ret_pvals = dsfdr.dsfdr(
+            table.values.T,
+            labels,
+            transform_function,
+            statistical_test,
+            alpha, permutations)
+
+        with open(index_fp, 'w') as index_f:
+            index_f.write('<html>\n')
+            index_f.write('<body>\n')
+            index_f.write('<h1>DSFDR statistical results</h1>\n')
+            index_f.write('<a href="dsfdr.csv">Download complete table as CSV</a>'
+                          '<br>\n')
+
+            df = pd.DataFrame(
+                    {
+                            "Reject": ret_reject,
+                            "Statistic": ret_tstat,
+                            "raw pvalue": ret_pvals
+                    },
+                    index=table.columns)
+            df.to_csv(os.path.join(output_dir,
+                                   'dsfdr.csv'),
+                      header=True, index=True)
 
 
 _statistical_tests = ['meandiff', 'mannwhiteny', 'kruwallis', 'stdmeandiff',
@@ -66,30 +87,10 @@ _statistical_tests = ['meandiff', 'mannwhiteny', 'kruwallis', 'stdmeandiff',
 _transform_functions = ['rank', 'log', 'pa', 'norm']
 
 
-DsfdrReject = SemanticType('DsfdrReject',
-                           variant_of=SampleData.field['type'])
-
-class DsfdrRejectFormat(model.TextFileFormat):
-    def sniff(self):
-        with self.open() as fh:
-            for line, _ in zip(fh, range(10)):
-                cells = line.split('\t')
-                if len(cells) != 2:
-                    return False
-            return True
-
-
-DsfdrRejectDirectoryFormat = model.SingleFileDirectoryFormat(
-    'DsfdrRejectDirectoryFormat', '¯\_(ツ)_/¯.tsv',
-    DsfdrRejectFormat)
-
-plugin.register_formats(DsfdrRejectFormat, DsfdrRejectDirectoryFormat)
-
-
-plugin.methods.register_function(
+plugin.visualizers.register_function(
     function=permutation_fdr,
     inputs={'table': FeatureTable[Frequency]},
-    outputs=[('reject', SampleData[DsfdrReject])],
+
     parameters={
         'metadata': MetadataColumn[Categorical],
         'statistical_test': Str % Choices(_statistical_tests),
