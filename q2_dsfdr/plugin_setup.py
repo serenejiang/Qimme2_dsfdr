@@ -1,12 +1,15 @@
 import qiime2.plugin
 from qiime2.plugin import (SemanticType, Str, Int, Float, Choices,
                            MetadataColumn, Categorical, Plugin)
+import qiime2.plugin.model as model
+
 from q2_types.feature_table import (
     FeatureTable, Frequency)
-from q2_types.sample_data import AlphaDiversity, SampleData
+from q2_types.sample_data import SampleData
 from dsfdr import dsfdr
 import pandas as pd
 import numpy as np
+
 
 _citation = ('Jiang L, Amir A, Morton JT, Heller R, Arias-Castro E, Knight R. 2017. '
              'Discrete False-Discovery Rate Improves Identification of Differentially Abundant Microbes'
@@ -63,16 +66,36 @@ _statistical_tests = ['meandiff', 'mannwhiteny', 'kruwallis', 'stdmeandiff',
 _transform_functions = ['rank', 'log', 'pa', 'norm']
 
 
+DsfdrReject = SemanticType('DsfdrReject',
+                           variant_of=SampleData.field['type'])
+
+class DsfdrRejectFormat(model.TextFileFormat):
+    def sniff(self):
+        with self.open() as fh:
+            for line, _ in zip(fh, range(10)):
+                cells = line.split('\t')
+                if len(cells) != 2:
+                    return False
+            return True
+
+
+DsfdrRejectDirectoryFormat = model.SingleFileDirectoryFormat(
+    'DsfdrRejectDirectoryFormat', '¯\_(ツ)_/¯.tsv',
+    DsfdrRejectFormat)
+
+plugin.register_formats(DsfdrRejectFormat, DsfdrRejectDirectoryFormat)
+
+
 plugin.methods.register_function(
     function=permutation_fdr,
     inputs={'table': FeatureTable[Frequency]},
-    outputs=[('reject', SampleData[AlphaDiversity])],
+    outputs=[('reject', SampleData[DsfdrReject])],
     parameters={
         'metadata': MetadataColumn[Categorical],
         'statistical_test': Str % Choices(_statistical_tests),
         'transform_function': Str % Choices(_transform_functions),
         'permutations': Int,
-        'alpha': Float,
+        'alpha': Float
     },
     name='Discrete FDR',
     description=("Discrete FDR")

@@ -1,8 +1,0 @@
-README.md
-q2_dsfdr/__init__.py
-q2_dsfdr/plugin_setup.py
-q2_dsfdr.egg-info/PKG-INFO
-q2_dsfdr.egg-info/SOURCES.txt
-q2_dsfdr.egg-info/dependency_links.txt
-q2_dsfdr.egg-info/entry_points.txt
-q2_dsfdr.egg-info/top_level.txt
