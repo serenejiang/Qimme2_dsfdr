@@ -81,7 +81,7 @@ def permutation_fdr(output_dir: str,
                       header=True, index=True)
 
 
-_statistical_tests = ['meandiff', 'mannwhiteny', 'kruwallis', 'stdmeandiff',
+_statistical_tests = ['meandiff', 'mannwhitney', 'kruwallis', 'stdmeandiff',
                       'spearman', 'pearson', 'nonzerospearman', 'nonzeropearson']
 
 _transform_functions = ['rank', 'log', 'pa', 'norm']
