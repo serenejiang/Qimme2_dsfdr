@@ -84,7 +84,7 @@ def permutation_fdr(output_dir: str,
 _statistical_tests = ['meandiff', 'mannwhitney', 'kruwallis', 'stdmeandiff',
                       'spearman', 'pearson', 'nonzerospearman', 'nonzeropearson']
 
-_transform_functions = ['rank', 'log', 'pa', 'norm']
+_transform_functions = ['rank', 'log', 'norm', 'binary', 'clr']
 
 
 plugin.visualizers.register_function(
