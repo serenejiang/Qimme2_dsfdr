@@ -36,18 +36,20 @@ def permutation_fdr(output_dir: str,
                     statistical_test: str = 'meandiff',
                     transform_function: str = 'rank',
                     alpha: float = 0.05,
-                    permutations: int=1000) -> None:
+                    permutations: int = 1000) -> None:
         index_fp = os.path.join(output_dir, 'index.html')
 
         metadata_series = metadata.to_series()[table.index]
         uvals = metadata_series.unique()
         if len(uvals) < 2:
             raise ValueError('Only one value in mapping file data column (%s). Aborting' % uvals[0])
-        if len(uvals) > 2:
+        if len(uvals) > 2 and statistical_test != 'kruwallis':
             raise ValueError('More than two values in mapping file data column (%s). Aborting' % uvals)
-        # labels need to be 0/1
+
+        # convert labels into incremental integers
         labels = np.zeros(len(metadata_series))
-        labels[metadata_series == uvals[1]] = 1
+        for i in range(1, len(uvals)):
+            labels[metadata_series == uvals[i]] = i
 
         # allow debug info. q2 takes care of what to show using the --verbose flag
         try:
@@ -84,7 +86,7 @@ def permutation_fdr(output_dir: str,
 _statistical_tests = ['meandiff', 'mannwhitney', 'kruwallis', 'stdmeandiff',
                       'spearman', 'pearson', 'nonzerospearman', 'nonzeropearson']
 
-_transform_functions = ['rank', 'log', 'norm', 'binary', 'clr']
+_transform_functions = ['rank', 'log', 'norm', 'binary', 'clr', 'none']
 
 
 plugin.visualizers.register_function(
