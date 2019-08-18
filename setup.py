@@ -4,7 +4,7 @@ import ast
 
 setup(
     name="q2-dsfdr",
-    version="0.0.1",
+    version="0.0.2",
     packages=find_packages(),
     author="Serene Jiang",
     author_email="serene1030@gmail.com",

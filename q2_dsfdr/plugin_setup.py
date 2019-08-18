@@ -1,6 +1,6 @@
 import qiime2.plugin
 from qiime2.plugin import (SemanticType, Str, Int, Float, Choices,
-                           MetadataColumn, Categorical, Plugin)
+                           MetadataColumn, Categorical, Numeric, Plugin)
 import qiime2.plugin.model as model
 
 from q2_types.feature_table import (
@@ -40,16 +40,24 @@ def permutation_fdr(output_dir: str,
         index_fp = os.path.join(output_dir, 'index.html')
 
         metadata_series = metadata.to_series()[table.index]
-        uvals = metadata_series.unique()
-        if len(uvals) < 2:
-            raise ValueError('Only one value in mapping file data column (%s). Aborting' % uvals[0])
-        if len(uvals) > 2 and statistical_test != 'kruwallis':
-            raise ValueError('More than two values in mapping file data column (%s). Aborting' % uvals)
 
-        # convert labels into incremental integers
-        labels = np.zeros(len(metadata_series))
-        for i in range(1, len(uvals)):
-            labels[metadata_series == uvals[i]] = i
+        # numeric metadata
+        if metadata.type == 'numeric':
+            if statistical_test not in ('spearman', 'pearson', 'nonzerospearman', 'nonzeropearson'):
+                raise ValueError('Cannot perform %s test on numeric metadata. Aborting' % statistical_test)
+            labels = metadata_series.values
+
+        # categorical metadata
+        elif metadata.type == 'categorical':
+            if statistical_test not in ('meandiff', 'mannwhitney', 'kruwallis', 'stdmeandiff'):
+                raise ValueError('Cannot perform %s test on categorical metadata. Aborting' % statistical_test)
+            # convert labels into incremental integers
+            labels = metadata_series.astype('category').cat.codes
+            n = len(set(labels))
+            if n == 1:
+                raise ValueError('Only one category in metadata column. Aborting')
+            if n > 2 and statistical_test != 'kruwallis':
+                raise ValueError('Cannot perform %s test on more than two categories. Aborting' % statistical_test)
 
         # allow debug info. q2 takes care of what to show using the --verbose flag
         try:
@@ -70,6 +78,8 @@ def permutation_fdr(output_dir: str,
             index_f.write('<h1>DSFDR statistical results</h1>\n')
             index_f.write('<a href="dsfdr.csv">Download complete table as CSV</a>'
                           '<br>\n')
+            index_f.write('</body>\n')
+            index_f.write('</html>\n')
 
             df = pd.DataFrame(
                     {
@@ -94,7 +104,7 @@ plugin.visualizers.register_function(
     inputs={'table': FeatureTable[Frequency]},
 
     parameters={
-        'metadata': MetadataColumn[Categorical],
+        'metadata': MetadataColumn[Categorical|Numeric],
         'statistical_test': Str % Choices(_statistical_tests),
         'transform_function': Str % Choices(_transform_functions),
         'permutations': Int,
